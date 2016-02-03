@@ -1,8 +1,8 @@
 require 'net/http'
 require 'net/https'
 require 'http/cookie'
-require 'pp'
- 
+
+# http client that use http-cookie to keep cookies. 
 class HttpSession
     def initialize(url = nil)
         @http = nil
@@ -15,6 +15,7 @@ class HttpSession
         ObjectSpace.define_finalizer(self) {|id| close()}
     end
     private
+    # select http session by host and port.
     def update_session(path)
         uri = URI.parse(path)
         if (uri.host.nil? && @uri) || (get_key(uri) == get_key(@uri))
@@ -31,10 +32,12 @@ class HttpSession
     def get_key(uri)
         uri ? :"#{uri.host}:#{uri.port}" : nil
     end
+    # set cookie to request.
     def set_cookie(request)
         cookies = @cookie.cookies(@uri)
         request["Cookie"] = HTTP::Cookie.cookie_value(cookies) unless cookies.empty?
     end
+    # get cookie from response.
     def update_cookie(response)
         cookies = response.get_fields("Set-Cookie") || [] 
         cookies.each do |value|
@@ -43,6 +46,7 @@ class HttpSession
     end
 
     public
+    # close all http session.
     def close()
         puts "HttpSession<#{self.object_id}> closed."
         @cookie.save(@cookie_file)
